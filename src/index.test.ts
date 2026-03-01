@@ -56,8 +56,8 @@ describe('index functions', () => {
       divinationSpy.mockRestore();
     });
 
-    test('should call divination() when first argument is "divination"', () => {
-      process.argv = ['node', 'index.js', 'divination'];
+    test('should call divination() when first argument is "gua"', () => {
+      process.argv = ['node', 'index.js', 'gua'];
 
       index.main();
 
@@ -65,7 +65,7 @@ describe('index functions', () => {
       expect(helpSpy).not.toHaveBeenCalled();
     });
 
-    test('should call help() when first argument is not "divination"', () => {
+    test('should call help() when first argument is not "gua"', () => {
       process.argv = ['node', 'index.js', 'other'];
 
       index.main();

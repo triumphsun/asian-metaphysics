@@ -10,6 +10,9 @@
     "lint": "eslint . --ext .ts",
     "format": "prettier --write \"src/**/*.ts\""
   },
+  "bin": {
+    "metaphysics": "./dist/index.js"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",

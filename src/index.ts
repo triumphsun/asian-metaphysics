@@ -58,7 +58,7 @@ export const transformWithFullPaths = (myHex: Hexagram) => {
 
 export const main = () => {
   const args = process.argv.slice(2);
-  if (args[0] === 'divination') {
+  if (args[0] === 'gua') {
     divination();
   } else {
     help();
