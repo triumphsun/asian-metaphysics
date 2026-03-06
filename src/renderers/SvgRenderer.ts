@@ -15,17 +15,17 @@ export class SvgRenderer implements GuaRenderer<string> {
       }
 
       const half = (barWidth - 40) / 2;
-      return `
-        <rect x="0" y="${y}" width="${half}" height="${barHeight}" fill="black"/>
-        <rect x="${half + 40}" y="${y}" width="${half}" height="${barHeight}" fill="black"/>
-      `;
+      return (
+        `<rect x="0" y="${y}" width="${half}" height="${barHeight}" fill="black"/>
+        <rect x="${half + 40}" y="${y}" width="${half}" height="${barHeight}" fill="black"/>`
+      );
     });
 
-    return `
-      <svg width="${barWidth}" height="${6 * (barHeight + gap)}" xmlns="http://www.w3.org/2000/svg">
+    return (
+      `<svg width="${barWidth}" height="${6 * (barHeight + gap)}" xmlns="http://www.w3.org/2000/svg">
         <title>${hex.fullTitle}</title>
         ${svgLines.join('')}
-      </svg>
-    `;
+      </svg>`
+    );
   }
 }
