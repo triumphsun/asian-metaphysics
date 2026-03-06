@@ -6,7 +6,38 @@ import { castHexagram } from '@/utils/divination';
 import { AsciiRenderer } from '@/renderers/AsciiRenderer';
 import { JsonRenderer } from '@/renderers/JsonRenderer';
 import { GuaRenderer } from '@/renderers/type';
-import { printAligned, HelpItem } from '@/utils/cli';
+import { printAligned, HelpItem, parseFlags, validateFlags, mutuallyExclusive } from '@/utils/cli';
+
+type GuaFlag = 'HELP' | 'JSON' | 'TEXT';
+
+interface FlagConfig {
+  flag: GuaFlag;
+  aliases: string[];
+  description: string;
+}
+
+const GUA_CONFIG: FlagConfig[] = [
+  { flag: 'JSON', aliases: ['--json'], description: 'Output in JSON format only' },
+  { flag: 'TEXT', aliases: ['--text'], description: 'Include ASCII and details output' },
+  { flag: 'HELP', aliases: ['--help', '-h'], description: 'Show this help message for gua' },
+];
+
+// 動態生成解析用的映射表
+const GUA_FLAG_MAP: Record<string, GuaFlag> = GUA_CONFIG.reduce(
+  (acc, { flag, aliases }) => {
+    aliases.forEach((alias) => {
+      acc[alias] = flag;
+    });
+    return acc;
+  },
+  {} as Record<string, GuaFlag>,
+);
+
+// 動態生成幫助訊息列表
+const GUA_HELP_ITEMS: HelpItem[] = GUA_CONFIG.map(({ aliases, description }) => ({
+  label: aliases.join(', '),
+  description,
+}));
 
 // eslint-disable-next-line
 export const transformWithChuHsi = (myHex: Hexagram) => {
@@ -35,15 +66,23 @@ export const transformWithFullPaths = (myHex: Hexagram) => {
 export const help = () => {
   console.log('usage: gua [options]');
   console.log('\r\noptions:');
-  const options: HelpItem[] = [
-    { label: '--json', description: 'Output in JSON format only' },
-    { label: '--help, -h', description: 'Show this help message for gua' },
-  ];
-  printAligned(options);
+  printAligned(GUA_HELP_ITEMS);
 };
 
 export const gua = (args: string[] = []) => {
-  if (args.includes('--help') || args.includes('-h')) {
+  const flags = parseFlags(args, GUA_FLAG_MAP);
+  const error = validateFlags<GuaFlag>(flags, [
+    mutuallyExclusive<GuaFlag>(['HELP', 'JSON']),
+    mutuallyExclusive<GuaFlag>(['HELP', 'TEXT']),
+  ]);
+
+  if (error) {
+    console.error(error);
+    help();
+    return;
+  }
+
+  if (flags.has('HELP')) {
     help();
     return;
   }
@@ -52,14 +91,15 @@ export const gua = (args: string[] = []) => {
   const myHex = Hexagram.fromQuaternate(divinationResult);
 
   const json: GuaRenderer<string> = new JsonRenderer();
-  console.log('\r\n>>> JSON Output:');
-  console.log(json.render(myHex));
+  console.log(json.render(myHex).replace(/\s/g, ''));
 
-  const ascii: GuaRenderer<string> = new AsciiRenderer();
-  console.log('\r\n\r\n>>> ASCII Output:');
-  console.log(ascii.render(myHex));
+  if (flags.has('TEXT')) {
+    const ascii: GuaRenderer<string> = new AsciiRenderer();
+    console.log('\r\n\r\n>>> ASCII Output:');
+    console.log(ascii.render(myHex));
 
-  console.log('\r\n\r\n>>> Details:');
-  console.log(`卦辭：${myHex.metadata?.judgment}`);
-  console.log(`重點變爻索引：${myHex.movingLineIndices.join(', ')}`);
+    console.log('\r\n\r\n>>> Details:');
+    console.log(`卦辭：${myHex.metadata?.judgment}`);
+    console.log(`重點變爻索引：${myHex.movingLineIndices.join(', ')}`);
+  }
 };
